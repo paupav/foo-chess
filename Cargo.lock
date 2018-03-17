@@ -1,4 +1,4 @@
 [[package]]
-name = "chess"
+name = "foo_chess"
 version = "0.1.0"
 

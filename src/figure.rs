@@ -1,12 +1,10 @@
 #![allow(dead_code)]
-#![allow(unused_imports)]
 
-use std::io::{self, Write};
 use std::result::Result;
-use std::str::{SplitWhitespace, FromStr};
-use std::thread;
+use board::Board;
+use interface::Interface;
 
-type ValidMovement = Result<(), String>;
+use interface::{ValidMovement};
 
 pub const WHITE_KING: char = '♔';
 pub const WHITE_QUEEN: char = '♕';
@@ -21,130 +19,107 @@ pub const BLACK_BISHOP: char = '♝';
 pub const BLACK_HUNTER: char = '♞';
 pub const BLACK_ROOK: char = '♜';
 pub const BLACK_PAWN: char = '♟';
-//add hash map later
 
-pub const BLACK: i32 = 1;
-pub const WHITE: i32 = 0;
-
+pub const WHITE_FIGURE: i32 = 1; 
+pub const BLACK_FIGURE: i32 = -WHITE_FIGURE; // black figure is negative WHITE_FIGURE is dependency in main
 //           		   0  45  90  135 180 225 270 315
 const DIRX: [i32; 8] = [0, -1, -1, -1,  0,  1, 1, 1];
 const DIRY: [i32; 8] = [1,  1,  0, -1, -1, -1, 0, 1];
 
-pub struct Vector<T> {
-	x: T,
-	y: T,
-}
-
-pub struct Figure {
-	icon: char,
-	pos: Vector<i32>,
-}
+pub struct Figure;
 
 impl Figure {
-
-	pub fn new(icon: char, row: i32, column: i32) -> Figure {
-		Figure{
-			icon: icon,
-			pos: Vector{x: row, y: column}
-		}
+	pub fn get_figure_color(icon: char) -> i32 {
+		if 9812 <= icon as usize && icon as usize <= 9817{ WHITE_FIGURE }
+		else if 9818 <= icon as usize && icon as usize <= 9823{ BLACK_FIGURE }
+		else { panic!("Asked color of unknown figure!") }
 	}
 
-	pub fn move_figure(&self, turn: i32) {
+	pub fn move_figure(current_pos: (i32, i32), board: &mut Board) -> ValidMovement {
 
-		loop {
-			let _ = io::stdout().flush();
-			let mut input = String::new();
-			io::stdin()
-				.read_line(&mut input)
-				.expect("failed to read from standard input 1");
+		let icon = board.get_field_content(current_pos);
+		print!("{},", icon);
 
-			if let Err(result) = self.valid_movement(&mut input) {
-				print!("{}", result);
-			} else { break; }
-
-		}
-
-	}
-
-	fn valid_movement(&self, input: &mut str) -> ValidMovement {
-
-		let mut parts = input.split_whitespace();
-
-		match (parts.next(), parts.next()) {
-
-			(Some(number), Some(letter)) =>
-			{
-
-				let row = {
-					if let Ok(num) = number.parse::<i32>() {
-						num
-					} else {
-						return Err("First input should be number!\n".to_string());
+		let requested_pos = Interface::read_input()?;
+		match icon {
+			WHITE_QUEEN | BLACK_QUEEN => {
+				Figure::check_lanes(&(current_pos, requested_pos), 0, 45, 99, &board)?;
+			},
+			WHITE_KING | BLACK_KING => {
+				Figure::check_lanes(&(current_pos, requested_pos), 0, 45, 1, &board)?;
+			},
+			WHITE_BISHOP | BLACK_BISHOP => {
+				Figure::check_lanes(&(current_pos, requested_pos), 45, 45, 99, &board)?;
+			},
+			WHITE_ROOK | BLACK_ROOK => {
+				Figure::check_lanes(&(current_pos, requested_pos), 0, 90, 99, &board)?;
+			},
+			WHITE_PAWN | BLACK_PAWN => {
+				let max_moves = {
+					if current_pos.0 == 7 && icon == WHITE_PAWN { (2 as i32) }
+					else if current_pos.0 == 2 && icon == BLACK_PAWN { (2 as i32) }
+					else { (1 as i32) }
+				};
+				let move_angle: i32 = { 
+					if icon == WHITE_PAWN { 90 } else { 270 } 
+				};
+				//println!("Max moves: {}", max_moves);
+				let can_move = {
+					if board.field_empty(requested_pos){ Figure::check_lane(current_pos, &requested_pos, move_angle as usize, max_moves, &board)? }
+					else { 
+						Figure::check_lane(current_pos, &requested_pos, (move_angle - 45 * (current_pos.1 - requested_pos.1)) as usize, 1, &board)? // todo
 					}
 				};
+				
+				if !can_move { return Err("can not move there!".to_string()); }
 
-				let column = {
-
-					if let Ok(lett) = letter.parse::<char>(){
-
-						if (lett.to_ascii_uppercase() as u8) < 64 {
-							return Err("Second input should be letter\n".to_string());
-						}
-
-						lett.to_ascii_uppercase() as u8 - 64
-					} else {
-						return Err("Second input should be letter\n".to_string());
-					}
-				};
-
-
-				println!("{} {}", row, column);
-
-				if row < 1 || column < 1 || row > 8 || column > 8 {
-					return Err("Input out of bounds\n".to_string());
-				}
-
-				return self.move_queen((row, column as i32));
 
 			},
+			_ => { panic!("unknown character in the field!") }
 
-			_ => { 
-				return Err("Wrong input, enter one number and one letter!\n".to_string());
+		};
+
+		board.move_char(current_pos, requested_pos); // it must be success becuase errors will handle the rest
+		Ok((requested_pos.0, requested_pos.1))
+	}
+
+
+	//helper functions
+	fn check_lanes(pos: &((i32, i32), (i32, i32)), starting_angle: usize, angle_increment: usize, max_moves: i32, board: &Board) -> Result<(), String> {
+
+		for i in 0..(360 / angle_increment) {
+			//println!("i == {}", i);
+			if Figure::check_lane(pos.0, &pos.1, starting_angle + angle_increment * i, max_moves, board)? {
+				return Ok(())
 			}
 		}
 
-		//Ok(())
-
+		Err("path was not found".to_string())
 	}
 
-	fn move_queen(&self, requested_pos: (i32, i32)) -> ValidMovement{
-		Err("queen still can't move\n".to_string())
-	}
+	fn check_lane(mut pos: (i32, i32), requested_pos: &(i32, i32), move_angle: usize, mut max_moves: i32, board: &Board) -> Result<bool, String>{
 
-	fn check_lanes(&self, requested_pos: (i32, i32), starting_angle: usize, angle_increment: usize) -> ValidMovement {
-		let num_of_threads = (315 - starting_angle) / angle_increment -1;
-		let mut thread_handles: Vec<thread::JoinHandle<_>> = Vec::new();
-
-		for i in 0..num_of_threads {
-			thread::spawn(|| {
-				Figure::check_lane((self.pos.x, self.pos.y), requested_pos, starting_angle + angle_increment * i, 99);
-			});
-		} 	
-
-		Ok(())
-	}
-
-	fn check_lane(mut pos: (i32, i32), requested_pos: (i32, i32), move_angle: usize, max_moves: i32) -> ValidMovement {
+		//println!("Checking at angle: {}", move_angle);
+		let mut path_blocked = false;
+		let color = Figure::get_figure_color(board.get_field_content(pos));
 		loop {
+			//println!("max moves: {}", max_moves);
 			pos.0 += DIRX[move_angle / 45];
-			pos.1 += DIRX[move_angle / 45];
+			pos.1 += DIRY[move_angle / 45];
+			//println!("after change: {} {}", pos.0, pos.1);
 
-			if pos.0 < 1 || pos.1 < 1 || pos.1 > 8 || pos.0 > 8 {
-				return Err("".to_string());
-			}
+			if Board::bounds_check(pos.0, pos.1).is_err() { return Ok(false); } // we are checking out of bounds!
 			if pos.0 == requested_pos.0 && pos.1 == requested_pos.1 {
-				return Ok(());
+				if path_blocked { return Err("this figure can't skip over other figures!".to_string()); }
+				if Figure::get_figure_color(board.get_field_content(pos)) == color { return Err("this figure can not sacrafice own figures!".to_string()) }
+				if max_moves <= 0 { return Err("this figure can't move that far!".to_string()); }
+
+				return Ok(true);
 			}
+
+			if !board.field_empty(pos) { path_blocked = true; }
+
+			max_moves -= 1;
 		}
 	}
 }

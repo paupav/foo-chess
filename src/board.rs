@@ -1,49 +1,60 @@
-use std::vec::Vec;
-use figure::{Vector, Figure, self};
+use interface::{ValidMovement};
 
-const WHITE_FIELD: char = '◻';
-const BLACK_FIELD: char = '◼';
+pub const WHITE_FIELD: char = '◻';
+pub const BLACK_FIELD: char = '◼';
+
 
 
 pub struct Board {
-	figures: Vec<Figure>,
 	board: [[char; 9]; 9],
 }
 
 impl Board {
 	pub fn new() -> Board {
-		let mut figures = Vec::new();
-		figures.push(Figure::new(figure::WHITE_QUEEN, 1, 4));
-
-		figures.get(0).expect("fefvw").move_figure(figure::BLACK);
-
-
 		Board {
-			figures,
 			board: [
-				['8','♜','♞','♝','♕','♔','♝','♞','♜'],
-				['7','♟','♟','♟','♟','♟','♟','♟','♟'],
-				['6','◻','◼','◻','◼','◻','◼','◻','◼'],
-				['5','◼','◻','◼','◻','◼','◻','◼','◻'],
-				['4','◻','◼','◻','◼','◻','◼','◻','◼'],
-				['3','◼','◻','◼','◻','◼','◻','◼','◻'],
-				['2','♗','♗','♗','♗','♗','♗','♗','♗'],
-				['1','♖','♘','♗','♕','♔','♗','♘','♖'],
 				['*','A','B', 'C','D','E','F', 'G','H'],
+				['1','♜','♞','♝','♛','♚','♝','♞','♜'],
+				['2','♟','♟','♟','♟','♟','♟','♟','♟'],
+				['3','◻','◼','◻','◼','◻','◼','◻','◼'],
+				['4','◼','◻','◼','◻','◼','◻','◼','◻'],
+				['5','◻','◼','◻','◼','◻','◼','◻','◼'],
+				['6','◼','◻','◼','◻','◼','◻','◼','◻'],
+				['7','♗','♗','♗','♗','♗','♗','♗','♗'],
+				['8','♖','♘','♗','♕','♔','♗','♘','♖'],
 			]
 		}
 	}
 
 	pub fn draw(&self) {
-		for row in self.board.into_iter() {
-			for character in row {
-				print!("{} ", character);
-			}
-			println!("");
+		for row in self.board.into_iter() { 
+			for character in row { 
+				print!("{} ", character); 
+			} 
+			println!(""); 
 		}
 	}
 
-	pub fn update(&self, old_pos: Vector<u32>, new_pos: Vector<u32>) {
+	pub fn bounds_check(row: i32, column: i32) -> ValidMovement {
+		if row < 1 || column < 1 || row > 8 || column > 8 { return Err("Input out of bounds".to_string()); }
+		Ok((row, column))
+	}
 
+	pub fn get_field_content(&self, pos: (i32, i32)) -> char {
+		self.board[pos.0 as usize][pos.1 as usize]
+	}
+
+	pub fn field_empty(&self, pos: (i32, i32)) -> bool { 
+		(self.get_field_content(pos) == WHITE_FIELD || self.get_field_content(pos) == BLACK_FIELD)
+	}
+
+	pub fn move_char(&mut self, old_pos: (i32, i32), new_pos: (i32, i32)) {
+		let old_pos = (old_pos.0 as usize, old_pos.1 as usize);
+		let new_pos = (new_pos.0 as usize, new_pos.1 as usize);
+		self.board[new_pos.0][new_pos.1] = self.board[old_pos.0][old_pos.1];
+		self.board[old_pos.0][old_pos.1] = {
+			let val = old_pos.0 + 8 * old_pos.1;
+			if (val % 2) == 0 { '◻' } else { '◼' }
+		};
 	}
 }
