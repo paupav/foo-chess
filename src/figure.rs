@@ -1,5 +1,3 @@
-#![allow(dead_code)]
-
 use std::result::Result;
 use board::Board;
 use interface::Interface;
@@ -32,13 +30,13 @@ impl Figure {
 	pub fn get_figure_color(icon: char) -> i32 {
 		if 9812 <= icon as usize && icon as usize <= 9817{ WHITE_FIGURE }
 		else if 9818 <= icon as usize && icon as usize <= 9823{ BLACK_FIGURE }
-		else { panic!("Asked color of unknown figure!") }
+		else { 0 }
 	}
 
 	pub fn move_figure(current_pos: (i32, i32), board: &mut Board) -> ValidMovement {
 
 		let icon = board.get_field_content(current_pos);
-		print!("{},", icon);
+		print!("Figure {} in the hand.", icon);
 
 		let requested_pos = Interface::read_input()?;
 		match icon {
@@ -46,13 +44,17 @@ impl Figure {
 				Figure::check_lanes(&(current_pos, requested_pos), 0, 45, 99, &board)?;
 			},
 			WHITE_KING | BLACK_KING => {
-				Figure::check_lanes(&(current_pos, requested_pos), 0, 45, 1, &board)?;
+				panic!("Castling, checkmate not implemented!");
+				//Figure::check_lanes(&(current_pos, requested_pos), 0, 45, 1, &board)?;
 			},
 			WHITE_BISHOP | BLACK_BISHOP => {
 				Figure::check_lanes(&(current_pos, requested_pos), 45, 45, 99, &board)?;
 			},
 			WHITE_ROOK | BLACK_ROOK => {
 				Figure::check_lanes(&(current_pos, requested_pos), 0, 90, 99, &board)?;
+			},
+			WHITE_HUNTER | BLACK_HUNTER => {
+				panic!("Hunter not implemented!");
 			},
 			WHITE_PAWN | BLACK_PAWN => {
 				let max_moves = {
@@ -89,9 +91,7 @@ impl Figure {
 
 		for i in 0..(360 / angle_increment) {
 			//println!("i == {}", i);
-			if Figure::check_lane(pos.0, &pos.1, starting_angle + angle_increment * i, max_moves, board)? {
-				return Ok(())
-			}
+			if Figure::check_lane(pos.0, &pos.1, starting_angle + angle_increment * i, max_moves, board)? { return Ok(()) }
 		}
 
 		Err("path was not found".to_string())
