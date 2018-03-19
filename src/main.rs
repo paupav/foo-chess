@@ -20,11 +20,11 @@ fn main() {
     	match interface::Interface::read_input() {
     		Ok(input_pos) => {
     			if figure::Figure::get_figure_color(board.get_field_content(input_pos)) != turn { 
-    				println!("it is not that players turn!");
+    				println!("Can not move other players figures!");
     				continue; 
     			}
 
-    			'move_figure: loop { 
+    			'move_figure: loop {     
     				match Figure::move_figure(input_pos, &mut board) {
     					Ok(pos) => { 
     						println!("Figure moved to: {} {}", pos.0, pos.1); 

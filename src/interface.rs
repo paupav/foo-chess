@@ -1,4 +1,5 @@
 use std::io::{self, Write};
+use std::ascii::AsciiExt;
 
 pub type ValidMovement = Result<(i32, i32), String>;
 pub struct Interface;
@@ -17,26 +18,17 @@ impl Interface {
 			(Some(number), Some(letter)) =>
 			{
 				let row = { // ? isn't implemented
-					if let Ok(num) = number.parse::<i32>() {
-						num
-					} else {
-						return Err("First input should be number!".to_string());
-					}
+					if let Ok(num) = number.parse::<i32>() { num } else { return Err("First input should be number!".to_string()); }
 				};
 
 				let column = {
-
 					if let Ok(lett) = letter.parse::<char>(){
-
 						if (lett.to_ascii_uppercase() as u8) < 64 { return Err("Second input should be letter".to_string()); }
-
 						(lett.to_ascii_uppercase() as u8 - 64) as i32
-
 					} else { return Err("Second input should be letter".to_string()); }
 				};
 
 				if row < 1 || column < 1 || row > 8 || column > 8 { return Err("Input our of bounds".to_string()); }
-
 				return Ok( (row, column) );
 			},
 

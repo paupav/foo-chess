@@ -1,9 +1,5 @@
-use interface::{ValidMovement};
-
 pub const WHITE_FIELD: char = '◻';
 pub const BLACK_FIELD: char = '◼';
-
-
 
 pub struct Board {
 	board: [[char; 9]; 9],
@@ -14,20 +10,20 @@ impl Board {
 		Board {
 			board: [
 				['*','A','B', 'C','D','E','F', 'G','H'],
-				['1','♜','♞','♝','♛','♚','♝','♞','♜'],
-				['2','♟','♟','♟','♟','♟','♟','♟','♟'],
+				['1','♖','♘','♗','♕','♔','♗','♘','♖'],
+				['2','♙','♙','♙','♙','♙','♙','♙','♙'],
 				['3','◻','◼','◻','◼','◻','◼','◻','◼'],
 				['4','◼','◻','◼','◻','◼','◻','◼','◻'],
 				['5','◻','◼','◻','◼','◻','◼','◻','◼'],
 				['6','◼','◻','◼','◻','◼','◻','◼','◻'],
-				['7','♙','♙','♙','♙','♙','♙','♙','♙'],
-				['8','♖','♘','♗','♕','♔','♗','♘','♖'],
+				['7','♟','♟','♟','♟','♟','♟','♟','♟'],
+				['8','♜','♞','♝','♛','♚','♝','♞','♜'],
 			]
 		}
 	}
 
 	pub fn draw(&self) {
-		for row in self.board.into_iter() { 
+		for row in self.board.into_iter().rev() { 
 			for character in row { 
 				print!("{} ", character); 
 			} 
@@ -35,9 +31,9 @@ impl Board {
 		}
 	}
 
-	pub fn bounds_check(row: i32, column: i32) -> ValidMovement {
-		if row < 1 || column < 1 || row > 8 || column > 8 { return Err("Input out of bounds".to_string()); }
-		Ok((row, column))
+	pub fn check_bounds(pos: (i32, i32)) -> Result<(), String> {
+		if pos.0 < 1 || pos.1 < 1 || pos.0 > 8 || pos.1 > 8 { return Err("input out of bounds!".to_string()); }
+		Ok(())
 	}
 
 	pub fn get_field_content(&self, pos: (i32, i32)) -> char {

@@ -19,7 +19,7 @@ pub const BLACK_ROOK: char = '♜';
 pub const BLACK_PAWN: char = '♟';
 
 pub const WHITE_FIGURE: i32 = 1; 
-pub const BLACK_FIGURE: i32 = -WHITE_FIGURE; // black figure is negative WHITE_FIGURE is dependency in main
+pub const BLACK_FIGURE: i32 = -WHITE_FIGURE; // black figure is negative WHITE_FIGURE, dependency in main
 //           		   0  45  90  135 180 225 270 315
 const DIRX: [i32; 8] = [0, -1, -1, -1,  0,  1, 1, 1];
 const DIRY: [i32; 8] = [1,  1,  0, -1, -1, -1, 0, 1];
@@ -54,7 +54,17 @@ impl Figure {
 				Figure::check_lanes(&(current_pos, requested_pos), 0, 90, 99, &board)?;
 			},
 			WHITE_HUNTER | BLACK_HUNTER => {
-				panic!("Hunter not implemented!");
+				if(current_pos.1 - 2 == requested_pos.1 && (current_pos.0 - 1 == requested_pos.0 || current_pos.0 + 1 == requested_pos.0)) ||
+				  (current_pos.1 - 1 == requested_pos.1 && (current_pos.0 - 2 == requested_pos.0 || current_pos.0 + 2 == requested_pos.0)) ||
+				  (current_pos.1 + 1 == requested_pos.1 && (current_pos.0 - 2 == requested_pos.0 || current_pos.0 + 2 == requested_pos.0)) ||
+				  (current_pos.1 + 2 == requested_pos.1 && (current_pos.0 - 1 == requested_pos.0 || current_pos.0 + 1 == requested_pos.0)) {
+
+					if Figure::get_figure_color(icon) == Figure::get_figure_color(board.get_field_content(requested_pos)) {
+						return Err("this figure can not sacrafice own figures!".to_string());
+					}
+
+					Board::check_bounds(requested_pos)?;
+				}
 			},
 			WHITE_PAWN | BLACK_PAWN => {
 				let max_moves = {
@@ -74,10 +84,9 @@ impl Figure {
 				};
 				
 				if !can_move { return Err("can not move there!".to_string()); }
-
-
+				panic!("pawn transformation not implemented!");
 			},
-			_ => { panic!("unknown character in the field!") }
+			_ => { panic!("moving unknown character!") }
 
 		};
 
@@ -108,7 +117,7 @@ impl Figure {
 			pos.1 += DIRY[move_angle / 45];
 			//println!("after change: {} {}", pos.0, pos.1);
 
-			if Board::bounds_check(pos.0, pos.1).is_err() { return Ok(false); } // we are checking out of bounds!
+			if Board::check_bounds(pos).is_err() { return Ok(false); }
 			if pos.0 == requested_pos.0 && pos.1 == requested_pos.1 {
 				if path_blocked { return Err("this figure can't skip over other figures!".to_string()); }
 				if Figure::get_figure_color(board.get_field_content(pos)) == color { return Err("this figure can not sacrafice own figures!".to_string()) }
