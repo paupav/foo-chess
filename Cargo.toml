@@ -1,5 +1,5 @@
 [package]
-name = "foo_chess"
+name = "foo-chess"
 version = "0.1.0"
 authors = ["Paulo Pavačić <pavacic.p@gmail.com>"]
 
