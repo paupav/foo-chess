@@ -1,8 +1,7 @@
 use std::result::Result;
 use board::Board;
-use interface::Interface;
 
-use interface::{ValidMovement};
+pub type ValidMovement = Result<(i32, i32), String>;
 
 pub const WHITE_KING: char = '♔';
 pub const WHITE_QUEEN: char = '♕';
@@ -33,12 +32,12 @@ impl Figure {
 		else { 0 }
 	}
 
-	pub fn move_figure(current_pos: (i32, i32), board: &mut Board) -> ValidMovement {
+	pub fn move_figure(board: &mut Board, read_fun: &Fn() -> ValidMovement, current_pos: (i32, i32)) -> ValidMovement {
 
 		let icon = board.get_field_content(current_pos);
 		print!("Figure {} in the hand.", icon);
 
-		let requested_pos = Interface::read_input()?;
+		let requested_pos = read_fun()?;
 		match icon {
 			WHITE_QUEEN | BLACK_QUEEN => {
 				Figure::check_lanes(&(current_pos, requested_pos), 0, 45, 99, &board)?;
@@ -68,29 +67,38 @@ impl Figure {
 			},
 			WHITE_PAWN | BLACK_PAWN => {
 				let max_moves = {
-					if current_pos.0 == 7 && icon == WHITE_PAWN { (2 as i32) }
-					else if current_pos.0 == 2 && icon == BLACK_PAWN { (2 as i32) }
+					if current_pos.0 == 2 && icon == WHITE_PAWN { (2 as i32) }
+					else if current_pos.0 == 7 && icon == BLACK_PAWN { (2 as i32) }
 					else { (1 as i32) }
 				};
 				let move_angle: i32 = { 
-					if icon == WHITE_PAWN { 90 } else { 270 } 
+					if icon == WHITE_PAWN { 270 } else { 90 } 
 				};
 				//println!("Max moves: {}", max_moves);
 				let can_move = {
-					if board.field_empty(requested_pos){ Figure::check_lane(current_pos, &requested_pos, move_angle as usize, max_moves, &board)? }
-					else { 
+
+					if current_pos.1 == requested_pos.1 { //pawn moving
+						if !board.field_empty(requested_pos) { return Err("pawn can only eat other figures diagonally!".to_string()); }
+						Figure::check_lane(current_pos, &requested_pos, move_angle as usize, max_moves, &board)? 
+					}
+					else { //pawn eating
 						Figure::check_lane(current_pos, &requested_pos, (move_angle - 45 * (current_pos.1 - requested_pos.1)) as usize, 1, &board)? // todo
 					}
 				};
 				
 				if !can_move { return Err("can not move there!".to_string()); }
-				panic!("pawn transformation not implemented!");
+
+				if (icon == WHITE_PAWN && requested_pos.0 == 8) || icon == BLACK_PAWN && requested_pos.0 == 1 {
+					println!("Once in a lifetime oportunity, swap figures");
+				}
+
+				//panic!("pawn can eat figures in front!");
 			},
 			_ => { panic!("moving unknown character!") }
 
 		};
 
-		board.move_char(current_pos, requested_pos); // it must be success becuase errors will handle the rest
+		board.move_char(current_pos, requested_pos); // it must be success because errors will handle all the other scenarios 
 		Ok((requested_pos.0, requested_pos.1))
 	}
 
@@ -120,7 +128,7 @@ impl Figure {
 			if Board::check_bounds(pos).is_err() { return Ok(false); }
 			if pos.0 == requested_pos.0 && pos.1 == requested_pos.1 {
 				if path_blocked { return Err("this figure can't skip over other figures!".to_string()); }
-				if Figure::get_figure_color(board.get_field_content(pos)) == color { return Err("this figure can not sacrafice own figures!".to_string()) }
+				if Figure::get_figure_color(board.get_field_content(pos)) == color { return Err("this figure can't sacrafice own figures!".to_string()) }
 				if max_moves <= 0 { return Err("this figure can't move that far!".to_string()); }
 
 				return Ok(true);
