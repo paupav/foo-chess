@@ -43,14 +43,32 @@ impl Figure {
 				Figure::check_lanes(&(current_pos, requested_pos), 0, 45, 99, &board)?;
 			},
 			WHITE_KING | BLACK_KING => {
-				panic!("Castling, checkmate not implemented!");
-				//Figure::check_lanes(&(current_pos, requested_pos), 0, 45, 1, &board)?;
+				let color = ((-Figure::get_figure_color(icon) +1)/2) as usize;
+				//panic!("Castling flags should be true when rook is eaten, should nto castle when fields are under attack), check not implemented!");
+				//castling, this works for both colors because of the way castling_rook_flags work
+				if requested_pos.0 == 1 + 7*color as i32 && ((requested_pos.1 == 3 && board.castling_rook_flags[color][0]) || 	
+													  (requested_pos.1 == 7 && board.castling_rook_flags[color][1])) {
+
+					//moving rook
+					board.move_char( (requested_pos.0, (requested_pos.1 / 4) * 7 + 1), 
+									 (requested_pos.0, requested_pos.1 - ((requested_pos.1 / 5) * 2 -1)) );
+
+				} else { Figure::check_lanes(&(current_pos, requested_pos), 0, 45, 1, &board)?; }	
+
+				board.castling_rook_flags[color][0] = false;
+				board.castling_rook_flags[color][1] = false;
+
 			},
 			WHITE_BISHOP | BLACK_BISHOP => {
 				Figure::check_lanes(&(current_pos, requested_pos), 45, 45, 99, &board)?;
 			},
 			WHITE_ROOK | BLACK_ROOK => {
-				Figure::check_lanes(&(current_pos, requested_pos), 0, 90, 99, &board)?;
+				Figure::check_lanes(&(current_pos, requested_pos), 0, 90, 99, &board)?;	
+
+				if current_pos.1 == 1 || current_pos.1 == 8 { // castling is not allowed with figure that moved
+					board.castling_rook_flags[(icon as usize / 9820) as usize][(current_pos.1 / 8) as usize] = false;
+					println!("{} {} je true", (icon as usize / 9820) as usize, (current_pos.1 / 8) as usize);
+				}
 			},
 			WHITE_HUNTER | BLACK_HUNTER => {
 				if(current_pos.1 - 2 == requested_pos.1 && (current_pos.0 - 1 == requested_pos.0 || current_pos.0 + 1 == requested_pos.0)) ||
@@ -88,15 +106,14 @@ impl Figure {
 				
 				if !can_move { return Err("can not move there!".to_string()); }
 
-				if (icon == WHITE_PAWN && requested_pos.0 == 8) || icon == BLACK_PAWN && requested_pos.0 == 1 {
-					println!("Once in a lifetime oportunity, swap figures");
+				if (icon == WHITE_PAWN && requested_pos.0 == 8) || (icon == BLACK_PAWN && requested_pos.0 == 1) {
+					panic!("Once in a lifetime oportunity, swap figures");
 				}
-
-				//panic!("pawn can eat figures in front!");
 			},
 			_ => { panic!("moving unknown character!") }
 
 		};
+
 
 		board.move_char(current_pos, requested_pos); // it must be success because errors will handle all the other scenarios 
 		Ok((requested_pos.0, requested_pos.1))
@@ -114,7 +131,7 @@ impl Figure {
 		Err("path was not found".to_string())
 	}
 
-	fn check_lane(mut pos: (i32, i32), requested_pos: &(i32, i32), move_angle: usize, mut max_moves: i32, board: &Board) -> Result<bool, String>{
+	fn check_lane(mut pos: (i32, i32), requested_pos: &(i32, i32), move_angle: usize, mut max_moves: i32, board: &Board) -> Result<bool, String> {
 
 		//println!("Checking at angle: {}", move_angle);
 		let mut path_blocked = false;
@@ -139,4 +156,9 @@ impl Figure {
 			max_moves -= 1;
 		}
 	}
+
+	fn check_chess() {
+
+	}
+
 }

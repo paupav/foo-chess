@@ -5,8 +5,8 @@ mod board;
 
 use figure::{WHITE_FIGURE, WHITE_KING, BLACK_KING, Figure, ValidMovement};
 use std::io::{self, Write};
-use std::ascii::AsciiExt;
-use ncurses::*;
+//use std::ascii::AsciiExt;
+//use ncurses::*;
 
 fn read_input() -> ValidMovement {
     let mut input = String::new();
@@ -30,7 +30,7 @@ fn read_input() -> ValidMovement {
                 } else { return Err("Second input should be letter".to_string()); }
             };
 
-            if row < 1 || column < 1 || row > 8 || column > 8 { return Err("Input our of bounds".to_string()); }
+            if row < 1 || column < 1 || row > 8 || column > 8 { return Err("Input our of bounds".to_string()); } // replace with check bonds
             return Ok( (row, column) );
         },
 
@@ -67,9 +67,9 @@ fn main() {
     					}
     					Err(msg) => { println!("Figure didn't move: {}", msg); }
    					}
-   					break; // tmp break
+   					break;
    				}
-   				//break; // break when king is eaten
+   				//break; // break when checkmate
     		}
     		Err(msg) => { println!("{}", msg); }
     	}
