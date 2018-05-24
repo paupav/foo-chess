@@ -24,12 +24,12 @@ impl Board {
 			board: [
 				['*','A','B','C','D','E','F', 'G','H'],
 				['1','♖','◼','◼','◼','♔','◼','◼','♖'],
-				['2','◼','♙','♙','♙','◼','♙','♙','◻'],
+				['2','◼','♟','♙','♙','◼','♙','♙','◻'],
 				['3','◻','◼','◻','◼','◻','◼','◻','◼'],
 				['4','◼','◻','◼','◻','◼','◻','◼','◻'],
 				['5','◻','◼','◻','◼','◻','◼','◻','◼'],
 				['6','◼','◻','◼','◻','◼','◻','◼','◻'],
-				['7','◻','♟','♟','♟','◻','♟','♟','◼'],
+				['7','◻','♟','♙','♟','◻','♟','♟','◼'],
 				['8','♜','◻','◻','◻','♚','◻','◻','♜'],
 			],
 			castling_rook_flags: [
@@ -40,6 +40,7 @@ impl Board {
 	}
 
 	pub fn draw(&self) {
+		print!("{}[2J", 27 as char);
 		for row in self.board.into_iter().rev() { 
 			for character in row { 
 				print!("{} ", character); 
@@ -69,5 +70,12 @@ impl Board {
 			let val = old_pos.0 + 8 * old_pos.1;
 			if (val % 2) == 0 { '◻' } else { '◼' }
 		};
+	}
+
+	pub fn set_field_content(&mut self, pos: &(i32, i32), icon: char) {
+		/*match Err(msg) = Board::check_bounds(*pos) {
+			panic!("{}", msg)
+		}*/
+		self.board[pos.0 as usize][pos.1 as usize] = icon;
 	}
 }
