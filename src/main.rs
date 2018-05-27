@@ -1,14 +1,27 @@
-extern crate ncurses;
+#![allow(unused_imports)]
+extern crate tiny_keccak;
 
 mod figure;
 mod board;
+mod block;
+mod blockchain;
 mod input_console;
 
 use figure::{WHITE_FIGURE, WHITE_KING, BLACK_KING, ValidMovement};
 use input_console::{movement_input, swap_figure_input};
 
+use block::Block;
+use blockchain::Blockchain;
+
 fn main() {
-    let mut board = board::Board::new();
+
+    let mut blockchain = Blockchain::new();
+    blockchain.chain.last_mut().expect("grg").mine_block(2);
+    blockchain.add_block(['B'; 128]);
+    blockchain.chain.last_mut().expect("grg").mine_block(2);
+    println!("Valid: {}", blockchain.is_valid());
+
+    /*let mut board = board::Board::new();
     let mut turn = WHITE_FIGURE;
     let king = (WHITE_KING as i32, BLACK_KING as i32);
 
@@ -53,6 +66,6 @@ fn main() {
 
     getch();
     endwin();*/
-
+*/
     
 }

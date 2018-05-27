@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use std::result::Result;
 use board::Board;
 

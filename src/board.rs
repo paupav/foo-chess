@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 pub const WHITE_FIELD: char = '◻';
 pub const BLACK_FIELD: char = '◼';
 
